@@ -8,28 +8,30 @@ import com.example.popularlibraries.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), MainView {
 
-    private var vb: ActivityMainBinding? = null
+    private lateinit var binding: ActivityMainBinding
     val presenter = MainPresenter(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        vb = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(vb?.root)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        val listener = View.OnClickListener {
-            presenter.counterClick(it.id)
+        with(binding) {
+            btnCounter1.setOnClickListener { presenter.counterClick(ButtonNumber.ONE) }
+            btnCounter2.setOnClickListener { presenter.counterClick(ButtonNumber.TWO) }
+            btnCounter3.setOnClickListener { presenter.counterClick(ButtonNumber.THREE) }
         }
-
-        vb?.btnCounter1?.setOnClickListener(listener)
-        vb?.btnCounter2?.setOnClickListener(listener)
-        vb?.btnCounter3?.setOnClickListener(listener)
     }
 
-    override fun setButtonText(index: Int, text: String) {
-        when (index) {
-            0 -> vb?.btnCounter1?.text = text
-            1 -> vb?.btnCounter2?.text = text
-            2 -> vb?.btnCounter3?.text = text
-        }
+    override fun setButton1Text(text: String) {
+        binding.btnCounter1.text = text
+    }
+
+    override fun setButton2Text(text: String) {
+        binding.btnCounter2.text = text
+    }
+
+    override fun setButton3Text(text: String) {
+        binding.btnCounter3.text = text
     }
 }
