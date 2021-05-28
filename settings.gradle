@@ -1,0 +1,2 @@
+rootProject.name = "PopularLibraries"
+include ':app'
