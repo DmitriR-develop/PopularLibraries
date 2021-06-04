@@ -2,7 +2,7 @@ package com.example.popularlibraries
 
 import android.os.Bundle
 import com.example.popularlibraries.databinding.ActivityMainBinding
-import com.example.popularlibraries.navigation.AndroidScreens
+import com.example.popularlibraries.navigation.UsersScreens
 import com.example.popularlibraries.navigation.BackButtonListener
 import com.example.popularlibraries.presenter.MainPresenter
 import com.example.popularlibraries.view.MainView
@@ -16,7 +16,7 @@ class MainActivity : MvpAppCompatActivity(), MainView {
     private val presenter by moxyPresenter {
         MainPresenter(
             App.instance.router,
-            AndroidScreens()
+            UsersScreens()
         )
     }
     private var vb: ActivityMainBinding? = null
@@ -33,8 +33,8 @@ class MainActivity : MvpAppCompatActivity(), MainView {
     }
 
     override fun onPause() {
-        super.onPause()
         App.instance.navigatorHolder.removeNavigator()
+        super.onPause()
     }
 
     override fun onBackPressed() {

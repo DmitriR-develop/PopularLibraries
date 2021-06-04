@@ -4,6 +4,8 @@ import com.example.popularlibraries.view.UserItemView
 import com.example.popularlibraries.view.UsersView
 import com.example.popularlibraries.model.GithubUser
 import com.example.popularlibraries.model.GithubUsersRepo
+import com.example.popularlibraries.navigation.UserScreens
+import com.example.popularlibraries.navigation.UsersScreens
 import com.github.terrakok.cicerone.Router
 import moxy.MvpPresenter
 
@@ -20,12 +22,14 @@ class UsersPresenter(val usersRepo: GithubUsersRepo, val router: Router) :
     }
 
     val usersListPresenter = UsersListPresenter()
+
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
         viewState.init()
         loadData()
         usersListPresenter.itemClickListener = { itemView ->
-//TODO: переход на экран пользователя c помощью router.navigateTo
+            val currentUser = usersListPresenter.users[itemView.pos]
+            router.navigateTo(UserScreens().user(currentUser))
         }
     }
 
