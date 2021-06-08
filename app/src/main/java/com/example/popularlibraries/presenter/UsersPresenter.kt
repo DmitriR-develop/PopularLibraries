@@ -1,11 +1,13 @@
 package com.example.popularlibraries.presenter
 
+import android.widget.Toast
 import com.example.popularlibraries.model.GithubUser
 import com.example.popularlibraries.model.GithubUsersRepo
 import com.example.popularlibraries.navigation.UserScreens
 import com.example.popularlibraries.view.UserItemView
 import com.example.popularlibraries.view.UsersView
 import com.github.terrakok.cicerone.Router
+import io.reactivex.rxjava3.core.Single
 import moxy.MvpPresenter
 
 class UsersPresenter(private val usersRepo: GithubUsersRepo, private val router: Router) :
@@ -15,8 +17,16 @@ class UsersPresenter(private val usersRepo: GithubUsersRepo, private val router:
         override var itemClickListener: ((UserItemView) -> Unit)? = null
         override fun getCount() = users.size
         override fun bindView(view: UserItemView) {
-            val user = users[view.pos]
-            view.setLogin(user.login)
+            Single.just(users[view.pos]).subscribe({
+                onBindViewSuccess(view, it.login)
+            }, ::onBindViewError)
+        }
+
+        private fun onBindViewSuccess(view: UserItemView, login: String) {
+            view.setLogin(login)
+        }
+
+        private fun onBindViewError(error: Throwable) {
         }
     }
 
@@ -33,9 +43,17 @@ class UsersPresenter(private val usersRepo: GithubUsersRepo, private val router:
     }
 
     fun loadData() {
-        val users = usersRepo.getUsers()
-        usersListPresenter.users.addAll(users)
+        usersRepo.getUsers()
+            .doOnComplete(::loadDataComplete)
+            .subscribe(::loadDataSuccess)
+    }
+
+    private fun loadDataComplete() {
         viewState.updateList()
+    }
+
+    private fun loadDataSuccess(user: GithubUser) {
+        usersListPresenter.users.add(user)
     }
 
     fun backPressed(): Boolean {
