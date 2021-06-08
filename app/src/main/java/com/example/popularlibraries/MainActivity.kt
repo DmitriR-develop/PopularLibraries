@@ -1,32 +1,35 @@
 package com.example.popularlibraries
 
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.popularlibraries.App.Navigation.navigatorHolder
-import com.example.popularlibraries.App.Navigation.router
-import com.example.popularlibraries.R.layout.activity_main
+import android.os.PersistableBundle
+import android.view.View
 import com.example.popularlibraries.databinding.ActivityMainBinding
-import com.example.popularlibraries.navigation.UsersScreens
-import com.github.terrakok.cicerone.androidx.AppNavigator
-import moxy.MvpAppCompatActivity
 
-class MainActivity : MvpAppCompatActivity(activity_main) {
+class MainActivity : AppCompatActivity(), MainView {
 
-    val navigator = AppNavigator(this, R.id.container)
     private var vb: ActivityMainBinding? = null
+    val presenter = MainPresenter(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         vb = ActivityMainBinding.inflate(layoutInflater)
-        savedInstanceState ?: router.newRootScreen(UsersScreens().users())
+        setContentView(vb?.root)
+
+        val listener = View.OnClickListener {
+            presenter.counterClick(it.id)
+        }
+
+        vb?.btnCounter1?.setOnClickListener(listener)
+        vb?.btnCounter2?.setOnClickListener(listener)
+        vb?.btnCounter3?.setOnClickListener(listener)
     }
 
-    override fun onResumeFragments() {
-        super.onResumeFragments()
-        navigatorHolder.setNavigator(navigator)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        navigatorHolder.removeNavigator()
+    override fun setButtonText(index: Int, text: String) {
+        when (index) {
+            0 -> vb?.btnCounter1?.text = text
+            1 -> vb?.btnCounter2?.text = text
+            2 -> vb?.btnCounter3?.text = text
+        }
     }
 }
