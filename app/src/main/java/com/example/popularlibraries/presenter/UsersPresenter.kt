@@ -1,15 +1,14 @@
 package com.example.popularlibraries.presenter
 
-import com.example.popularlibraries.view.UserItemView
-import com.example.popularlibraries.view.UsersView
 import com.example.popularlibraries.model.GithubUser
 import com.example.popularlibraries.model.GithubUsersRepo
 import com.example.popularlibraries.navigation.UserScreens
-import com.example.popularlibraries.navigation.UsersScreens
+import com.example.popularlibraries.view.UserItemView
+import com.example.popularlibraries.view.UsersView
 import com.github.terrakok.cicerone.Router
 import moxy.MvpPresenter
 
-class UsersPresenter(val usersRepo: GithubUsersRepo, val router: Router) :
+class UsersPresenter(private val usersRepo: GithubUsersRepo, private val router: Router) :
     MvpPresenter<UsersView>() {
     class UsersListPresenter : IUserListPresenter {
         val users = mutableListOf<GithubUser>()

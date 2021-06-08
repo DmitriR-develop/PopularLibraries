@@ -30,7 +30,7 @@ class UserFragment : MvpAppCompatFragment(), UserView, BackButtonListener {
 
     private val userPresenter by moxyPresenter {
         val user = arguments?.getParcelable<GithubUser>(USER_ARGUMENT_KEY)
-        UserPresenter(user!!, App.instance.router)
+        UserPresenter(user!!, App.Navigation.router)
     }
 
     override fun onCreateView(
