@@ -1,15 +1,7 @@
 package com.example.popularlibraries.model
 
-import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Single
 
-class GithubUsersRepo {
-    private val repositories = Observable.just(
-        GithubUser("login1"),
-        GithubUser("login2"),
-        GithubUser("login3"),
-        GithubUser("login4"),
-        GithubUser("login5")
-    )
-
-    fun getUsers(): Observable<GithubUser> = repositories
+interface GithubUsersRepo {
+    fun getUsers(): Single<List<GithubUser>>
 }

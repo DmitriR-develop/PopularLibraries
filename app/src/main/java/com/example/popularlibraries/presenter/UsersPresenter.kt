@@ -1,63 +1,66 @@
 package com.example.popularlibraries.presenter
 
-import android.widget.Toast
 import com.example.popularlibraries.model.GithubUser
 import com.example.popularlibraries.model.GithubUsersRepo
-import com.example.popularlibraries.navigation.UserScreens
+import com.example.popularlibraries.navigation.AndroidScreen
 import com.example.popularlibraries.view.UserItemView
 import com.example.popularlibraries.view.UsersView
 import com.github.terrakok.cicerone.Router
-import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 import moxy.MvpPresenter
 
-class UsersPresenter(private val usersRepo: GithubUsersRepo, private val router: Router) :
+class UsersPresenter(
+    private val usersRepo: GithubUsersRepo,
+    private val router: Router,
+    private val uiSched: Scheduler
+) :
     MvpPresenter<UsersView>() {
     class UsersListPresenter : IUserListPresenter {
         val users = mutableListOf<GithubUser>()
         override var itemClickListener: ((UserItemView) -> Unit)? = null
-        override fun getCount() = users.size
+
         override fun bindView(view: UserItemView) {
-            Single.just(users[view.pos]).subscribe({
-                onBindViewSuccess(view, it.login)
-            }, ::onBindViewError)
+            val user = users[view.pos]
+            user.login?.let { view.setLogin(it) }
+            user.avatarUrl?.let { view.loadAvatar(it) }
         }
 
-        private fun onBindViewSuccess(view: UserItemView, login: String) {
-            view.setLogin(login)
-        }
-
-        private fun onBindViewError(error: Throwable) {
-        }
+        override fun getCount() = users.size
     }
 
     val usersListPresenter = UsersListPresenter()
+    var disposable: CompositeDisposable = CompositeDisposable()
 
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
         viewState.init()
         loadData()
         usersListPresenter.itemClickListener = { itemView ->
-            val currentUser = usersListPresenter.users[itemView.pos]
-            router.navigateTo(UserScreens().user(currentUser))
+            val user = usersListPresenter.users[itemView.pos]
+            router.navigateTo(AndroidScreen.UserScreens(user).getFragment())
         }
     }
 
     fun loadData() {
-        usersRepo.getUsers()
-            .doOnComplete(::loadDataComplete)
-            .subscribe(::loadDataSuccess)
+        disposable.add(usersRepo.getUsers()
+            .observeOn(uiSched)
+            .subscribe( { users -> subscribeUsers(users) }, { it.printStackTrace() }))
     }
 
-    private fun loadDataComplete() {
+    fun subscribeUsers(users: List<GithubUser>) {
+        usersListPresenter.users.clear()
+        usersListPresenter.users.addAll(users)
         viewState.updateList()
-    }
-
-    private fun loadDataSuccess(user: GithubUser) {
-        usersListPresenter.users.add(user)
     }
 
     fun backPressed(): Boolean {
         router.exit()
         return true
+    }
+
+    override fun onDestroy() {
+        disposable.dispose()
+        super.onDestroy()
     }
 }
