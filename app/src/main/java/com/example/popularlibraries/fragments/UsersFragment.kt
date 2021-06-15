@@ -7,10 +7,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.popularlibraries.App
 import com.example.popularlibraries.UsersRVAdapter
 import com.example.popularlibraries.databinding.FragmentUsersBinding
-import com.example.popularlibraries.model.GithubUsersRepo
+import com.example.popularlibraries.model.Api
+import com.example.popularlibraries.model.GlideImageLoader
+import com.example.popularlibraries.model.RetrofitGithubUsersRepo
 import com.example.popularlibraries.navigation.BackButtonListener
 import com.example.popularlibraries.presenter.UsersPresenter
 import com.example.popularlibraries.view.UsersView
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
 
@@ -20,28 +23,31 @@ class UsersFragment : MvpAppCompatFragment(), UsersView, BackButtonListener {
     }
 
     val presenter: UsersPresenter by moxyPresenter {
-        UsersPresenter(GithubUsersRepo(), App.Navigation.router)
+        UsersPresenter(
+            RetrofitGithubUsersRepo(Api.api),
+            App.instance.router,
+            AndroidSchedulers.mainThread()
+        )
     }
     private var adapter: UsersRVAdapter? = null
-
     private var vb: FragmentUsersBinding? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = FragmentUsersBinding.inflate(inflater, container, false).also {
         vb = it
     }.root
 
     override fun onDestroyView() {
-        super.onDestroyView()
         vb = null
+        adapter = null
+        super.onDestroyView()
     }
 
     override fun init() {
         vb?.rvUsers?.layoutManager = LinearLayoutManager(context)
-        adapter = UsersRVAdapter(presenter.usersListPresenter)
+        adapter = UsersRVAdapter(presenter.usersListPresenter, GlideImageLoader())
         vb?.rvUsers?.adapter = adapter
     }
 
