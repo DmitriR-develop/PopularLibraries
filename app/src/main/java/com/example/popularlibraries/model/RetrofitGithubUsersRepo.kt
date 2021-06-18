@@ -1,11 +1,25 @@
 package com.example.popularlibraries.model
 
+import com.example.popularlibraries.INetworkStatus
+import com.example.popularlibraries.cache.IGithubUsersCache
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
 
-class RetrofitGithubUsersRepo(val api: IDataSource) : GithubUsersRepo {
+class RetrofitGithubUsersRepo(
+    val api: IDataSource,
+    val networkStatus: INetworkStatus,
+    val githubUsersCache: IGithubUsersCache
+) : GithubUsersRepo {
     override fun getUsers(): Single<List<GithubUser>> =
-        api.getUsers().subscribeOn(Schedulers.io()) ?: Single
-            .error<List<GithubUser>>(RuntimeException("Users not load"))
-            .subscribeOn(Schedulers.io())
+        networkStatus.isOnlineSingle()
+            .flatMap { isOnline ->
+                if (isOnline) {
+                    api.getUsers()
+                        .flatMap { users ->
+                            githubUsersCache.putUsers(users).toSingleDefault(users)
+                        }
+                } else {
+                    githubUsersCache.getUsers()
+                }
+            }.subscribeOn(Schedulers.io())
 }

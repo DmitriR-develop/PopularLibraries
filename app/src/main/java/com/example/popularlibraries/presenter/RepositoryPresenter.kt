@@ -15,7 +15,7 @@ class RepositoryPresenter(
         viewState.init()
         viewState.setId(gitHubRepo.id ?: "")
         viewState.setTitle(gitHubRepo.name ?: "")
-        viewState.setForksCount(gitHubRepo.forksCount ?: "")
+        viewState.setForksCount((gitHubRepo.forksCount ?: 0).toString())
     }
 
     fun backPressed(): Boolean {
