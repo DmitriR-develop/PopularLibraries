@@ -2,54 +2,82 @@ package com.example.popularlibraries.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.popularlibraries.App
+import com.example.popularlibraries.NetworkStatusImpl
+import com.example.popularlibraries.RepositoryRVAAdapter
+import com.example.popularlibraries.cache.GithubRepositoriesCacheImpl
 import com.example.popularlibraries.databinding.FragmentUserBinding
+import com.example.popularlibraries.model.Api
 import com.example.popularlibraries.model.GithubUser
+import com.example.popularlibraries.model.RetrofitGithubRepositoriesRepo
 import com.example.popularlibraries.navigation.BackButtonListener
 import com.example.popularlibraries.presenter.UserPresenter
+import com.example.popularlibraries.room.Database
 import com.example.popularlibraries.view.UserView
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
 
 class UserFragment : MvpAppCompatFragment(), UserView, BackButtonListener {
 
-    companion object {
-        private const val USER_ARGUMENT_KEY = "userArgumentKey"
-
-        fun newInstance(user: GithubUser) = UserFragment().apply {
-            arguments = Bundle().apply {
-                putParcelable(USER_ARGUMENT_KEY, user)
-            }
-        }
+    private val database: Database by lazy {
+        Database.apply { create(requireContext()) }.getInstance()
     }
 
-    private var _binding: FragmentUserBinding? = null
-    private val binding get() = _binding!!
-
-    private val userPresenter by moxyPresenter {
-        val user = arguments?.getParcelable<GithubUser>(USER_ARGUMENT_KEY)
-        UserPresenter(user!!, App.Navigation.router)
+    private var vb: FragmentUserBinding? = null
+    private var adapter: RepositoryRVAAdapter? = null
+    val presenter: UserPresenter by moxyPresenter {
+        val user = arguments?.getParcelable<GithubUser>(USER) as GithubUser
+        UserPresenter(
+            App.instance.router,
+            user,
+            RetrofitGithubRepositoriesRepo(
+                Api.api,
+                NetworkStatusImpl(requireContext()),
+                GithubRepositoriesCacheImpl(database)
+            ),
+            AndroidSchedulers.mainThread()
+        )
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentUserBinding.inflate(layoutInflater, container, false)
-        return binding.root
+    ) = FragmentUserBinding.inflate(inflater, container, false).also {
+        vb = it
+    }.root
+
+    override fun init() {
+        vb?.recyclerRepository?.layoutManager = LinearLayoutManager(context)
+        adapter = RepositoryRVAAdapter(presenter.reposListPresenter)
+        vb?.recyclerRepository?.adapter = adapter
     }
+
+    override fun setLogin(text: String) {
+        vb?.userLogin?.text = text
+    }
+
+    override fun updateList() {
+        adapter?.notifyDataSetChanged()
+    }
+
+    override fun backPressed() = presenter.backPressed()
 
     override fun onDestroyView() {
+        vb = null
+        adapter = null
         super.onDestroyView()
-        _binding = null
     }
 
-    override fun backPressed() = userPresenter.backPressed()
-
-    override fun showUser(login: String) {
-        binding.userLogin.text = login
+    companion object {
+        private const val USER = "USER"
+        fun newInstance(user: GithubUser) =
+            UserFragment().apply {
+                arguments = Bundle().apply {
+                    putParcelable(USER, user)
+                }
+            }
     }
 }
