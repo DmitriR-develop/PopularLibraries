@@ -9,13 +9,19 @@ import com.github.terrakok.cicerone.Router
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import moxy.MvpPresenter
+import javax.inject.Inject
 
-class UsersPresenter(
-    private val usersRepo: GithubUsersRepo,
-    private val router: Router,
-    private val uiSched: Scheduler
-) :
-    MvpPresenter<UsersView>() {
+class UsersPresenter() : MvpPresenter<UsersView>() {
+
+    @Inject
+    lateinit var usersRepo: GithubUsersRepo
+
+    @Inject
+    lateinit var router: Router
+
+    @Inject
+    lateinit var uiSched: Scheduler
+
     class UsersListPresenter : IUserListPresenter {
         val users = mutableListOf<GithubUser>()
         override var itemClickListener: ((UserItemView) -> Unit)? = null
@@ -43,9 +49,11 @@ class UsersPresenter(
     }
 
     fun loadData() {
-        disposable.add(usersRepo.getUsers()
-            .observeOn(uiSched)
-            .subscribe( { users -> subscribeUsers(users) }, { it.printStackTrace() }))
+        disposable.add(
+            usersRepo.getUsers()
+                .observeOn(uiSched)
+                .subscribe({ users -> subscribeUsers(users) }, { it.printStackTrace() })
+        )
     }
 
     fun subscribeUsers(users: List<GithubUser>) {

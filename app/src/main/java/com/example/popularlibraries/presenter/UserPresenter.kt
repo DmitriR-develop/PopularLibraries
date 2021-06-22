@@ -9,16 +9,20 @@ import com.example.popularlibraries.view.UserView
 import com.github.terrakok.cicerone.Router
 import io.reactivex.rxjava3.core.Scheduler
 import moxy.MvpPresenter
+import javax.inject.Inject
 
-class UserPresenter(
-    private val router: Router,
-    private val user: GithubUser,
-    private val repositoriesRepo: IGithubRepositoriesRepo,
-    private val uiScheduler: Scheduler
-) :
-    MvpPresenter<UserView>() {
+class UserPresenter(private val user: GithubUser) : MvpPresenter<UserView>() {
 
-    class RepoListPresenter: IRepoListPresenter {
+    @Inject
+    lateinit var router: Router
+
+    @Inject
+    lateinit var uiScheduler: Scheduler
+
+    @Inject
+    lateinit var iGithubRepositoriesRepo: IGithubRepositoriesRepo
+
+    class RepoListPresenter : IRepoListPresenter {
         val repos = mutableListOf<GitHubRepo>()
         override var itemClickListener: ((RepoItemView) -> Unit)? = null
         override fun getCount() = repos.size
@@ -43,7 +47,7 @@ class UserPresenter(
     }
 
     fun loadData() {
-        repositoriesRepo.getRepositories(user)
+        iGithubRepositoriesRepo.getRepositories(user)
             .observeOn(uiScheduler)
             .subscribe({ repos -> updateRepos(repos) }, { it.printStackTrace() })
     }

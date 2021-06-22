@@ -6,8 +6,9 @@ import com.example.popularlibraries.room.RoomGithubUser
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
+import javax.inject.Inject
 
-class GithubUsersCacheImpl(private val db: Database) : IGithubUsersCache {
+class GithubUsersCacheImpl @Inject constructor(private val db: Database) : IGithubUsersCache {
 
     override fun getUsers(): Single<List<GithubUser>> =
         Single.fromCallable {

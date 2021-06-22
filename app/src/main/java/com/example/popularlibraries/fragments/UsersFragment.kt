@@ -5,18 +5,12 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.popularlibraries.App
-import com.example.popularlibraries.NetworkStatusImpl
 import com.example.popularlibraries.UsersRVAdapter
-import com.example.popularlibraries.cache.GithubUsersCacheImpl
 import com.example.popularlibraries.databinding.FragmentUsersBinding
-import com.example.popularlibraries.model.Api
 import com.example.popularlibraries.model.GlideImageLoader
-import com.example.popularlibraries.model.RetrofitGithubUsersRepo
 import com.example.popularlibraries.navigation.BackButtonListener
 import com.example.popularlibraries.presenter.UsersPresenter
-import com.example.popularlibraries.room.Database
 import com.example.popularlibraries.view.UsersView
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
 
@@ -25,20 +19,10 @@ class UsersFragment : MvpAppCompatFragment(), UsersView, BackButtonListener {
         fun newInstance() = UsersFragment()
     }
 
-    val database: Database by lazy {
-        Database.apply { create(requireContext()) }.getInstance()
-    }
-
     val presenter: UsersPresenter by moxyPresenter {
-        UsersPresenter(
-            RetrofitGithubUsersRepo(
-                Api.api,
-                NetworkStatusImpl(requireContext()),
-                GithubUsersCacheImpl(database)
-            ),
-            App.instance.router,
-            AndroidSchedulers.mainThread()
-        )
+        UsersPresenter().apply {
+            App.instance.appComponent.inject(this)
+        }
     }
     private var adapter: UsersRVAdapter? = null
     private var vb: FragmentUsersBinding? = null
